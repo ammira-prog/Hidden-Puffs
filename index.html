@@ -398,6 +398,7 @@ body{
   const nextBtn = document.getElementById("nextBtn");
 
   let foundSet = new Set();
+  let pendingFinal = false;
 
   // Audio
   let audioCtx = null;
@@ -451,10 +452,21 @@ body{
     nextBtn.style.display = showKeep ? "inline-block" : "none";
     bubbleBack.style.display = "flex";
   }
-  function closeBubble(){ bubbleBack.style.display = "none"; }
-  closeBtn.addEventListener("click", closeBubble);
-  nextBtn.addEventListener("click", closeBubble);
-  bubbleBack.addEventListener("click", (e)=>{ if(e.target === bubbleBack) closeBubble(); });
+  function closeBubble(){
+  bubbleBack.style.display = "none";
+
+  // if we just completed the hunt, show the final message AFTER closing the last one
+  if (pendingFinal){
+    pendingFinal = false;
+    confettiPop();
+    yeySound();
+    openBubble({
+      msg: "yey!! you found them all<br>(including me)!",
+      sub: "ok… come collect your reward 😌",
+      showKeep: false
+    });
+  }
+}
 
   // Stars
   function addStars(){
@@ -520,17 +532,8 @@ body{
     });
 
     if(foundSet.size === TOTAL){
-      setTimeout(() => {
-        confettiPop();
-        yeySound();
-        openBubble({
-          msg: "yey!! you found them all<br>(including me)!",
-          sub: "ok… come collect your reward 😌",
-          showKeep: false
-        });
-      }, 260);
-    }
-  }
+  pendingFinal = true; // final message will appear after he closes the last puff message
+}
 
   // Decoy puff
   function createDecoy(d){
@@ -649,3 +652,4 @@ body{
 </script>
 </body>
 </html>
+
