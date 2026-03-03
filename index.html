@@ -7,8 +7,7 @@
 
 <style>
 :root{
-  --card: rgba(255,255,255,.86);
-  --ink: #2b2b2b;
+  --ink:#2b2b2b;
   --pink:#ffc1de;
   --pink2:#ff9fcb;
 }
@@ -50,7 +49,7 @@ body{
   border-radius:999px;
   padding:10px 14px;
   box-shadow: 0 10px 30px rgba(0,0,0,.14);
-  font-weight:800;
+  font-weight:900;
 }
 .btn{
   pointer-events:auto;
@@ -59,7 +58,7 @@ body{
   padding:10px 14px;
   background: linear-gradient(135deg, rgba(255,193,222,.95), rgba(185,220,255,.95));
   box-shadow: 0 10px 30px rgba(0,0,0,.14);
-  font-weight:900;
+  font-weight:950;
   cursor:pointer;
   color:#2b2b2b;
 }
@@ -81,7 +80,7 @@ body{
   background: rgba(255,255,255,.72);
   border:1px solid rgba(0,0,0,.06);
   box-shadow: 0 10px 30px rgba(0,0,0,.12);
-  max-width: 720px;
+  max-width: 740px;
 }
 .title{
   font-weight:950;
@@ -96,8 +95,8 @@ body{
 .instruction{
   margin-top:6px;
   font-size:13px;
-  font-weight:800;
-  opacity:.82;
+  font-weight:850;
+  opacity:.84;
 }
 
 /* Horizontal-only map area */
@@ -142,7 +141,7 @@ body{
   pointer-events:none;
 }
 
-/* Base puff (plush) */
+/* Plush puff base */
 .puff{
   position:absolute;
   width:64px; height:64px;
@@ -151,9 +150,7 @@ body{
   cursor:pointer;
   user-select:none;
   -webkit-tap-highlight-color: transparent;
-
-  background:
-    radial-gradient(circle at 35% 28%, #fff2f8 0 40%, var(--pink) 62%, var(--pink2) 100%);
+  background: radial-gradient(circle at 35% 28%, #fff2f8 0 40%, var(--pink) 62%, var(--pink2) 100%);
   box-shadow:
     0 18px 34px rgba(0,0,0,.18),
     0 0 18px rgba(255,255,255,.25);
@@ -162,7 +159,7 @@ body{
 }
 .puff:active{ transform: translate(-50%,-50%) scale(.92); }
 
-/* Face + glossy eyes */
+/* Real puff face */
 .puff.real::before{
   content:"";
   position:absolute;
@@ -189,10 +186,8 @@ body{
   opacity:.75;
 }
 
-/* Special puff aura */
-.puff.special{
-  width:72px; height:72px;
-}
+/* Special puff */
+.puff.special{ width:72px; height:72px; }
 .puff.special .aura{
   position:absolute;
   inset:-18px;
@@ -206,7 +201,7 @@ body{
   50%{ transform: scale(1.08); opacity:1; }
 }
 
-/* Decoy colors + faces */
+/* Decoys */
 .puff.decoy{ opacity:.92; filter: saturate(1.08); }
 .puff.decoy.face::before{
   content:"";
@@ -259,7 +254,7 @@ body{
 .sub{
   margin:10px 0 0;
   font-size:13px;
-  font-weight:800;
+  font-weight:850;
   opacity:.72;
 }
 .actions{
@@ -274,7 +269,7 @@ body{
   box-shadow:none;
 }
 
-/* Confetti POP */
+/* Confetti pop */
 #confetti{
   position:fixed;
   inset:0;
@@ -319,7 +314,7 @@ body{
 <script>
 (() => {
   const TOTAL = 8;
-  const LS_KEY = "mira_puff_hunt_v4_found";
+  const LS_KEY = "mira_puff_hunt_v5_found";
 
   const messages = [
     "you're adorable",
@@ -332,7 +327,7 @@ body{
     "looking forward to those yummy hugs ♡"
   ];
 
-  // ✅ Real puffs (special moved far away from the cluster)
+  // Real puffs (special far right, separated)
   const realPositions = [
     {x: 220,  y: 220},
     {x: 560,  y: 360},
@@ -341,23 +336,25 @@ body{
     {x: 1680, y: 260},
     {x: 1900, y: 420},
     {x: 1120, y: 520},
-    {x: 2320, y: 340} // ⭐ SPECIAL: far right, separated
+    {x: 2320, y: 320} // SPECIAL (separated)
   ];
 
-  // ✅ LOTS more decoys (doesn't count)
+  // More decoys (lots)
   const decoys = [
-    // left area
+    // left cluster
     {x: 140, y: 420, cls:"c2 face"},
-    {x: 300, y: 520, cls:"c3 blank"},
-    {x: 360, y: 260, cls:"c1 face"},
+    {x: 260, y: 520, cls:"c3 blank"},
+    {x: 320, y: 260, cls:"c1 face"},
     {x: 420, y: 320, cls:"c4 blank"},
     {x: 520, y: 220, cls:"c2 blank"},
     {x: 640, y: 520, cls:"c1 blank"},
     {x: 720, y: 280, cls:"c3 face"},
     {x: 820, y: 420, cls:"c4 face"},
     {x: 900, y: 220, cls:"c2 face"},
+    {x: 460, y: 460, cls:"c3 face"},
+    {x: 600, y: 340, cls:"c4 blank"},
 
-    // mid area
+    // mid
     {x: 1040, y: 380, cls:"c1 blank"},
     {x: 1100, y: 240, cls:"c4 face"},
     {x: 1200, y: 420, cls:"c3 blank"},
@@ -367,8 +364,12 @@ body{
     {x: 1520, y: 340, cls:"c3 face"},
     {x: 1580, y: 460, cls:"c2 face"},
     {x: 1620, y: 520, cls:"c1 blank"},
+    {x: 980,  y: 520, cls:"c2 face"},
+    {x: 1300, y: 240, cls:"c3 blank"},
+    {x: 1360, y: 520, cls:"c2 blank"},
+    {x: 1500, y: 240, cls:"c4 face"},
 
-    // right-ish (before special zone)
+    // right (pre-special)
     {x: 1760, y: 360, cls:"c4 face"},
     {x: 1820, y: 240, cls:"c3 blank"},
     {x: 1980, y: 260, cls:"c2 blank"},
@@ -376,13 +377,17 @@ body{
     {x: 2100, y: 340, cls:"c3 face"},
     {x: 2160, y: 460, cls:"c4 blank"},
     {x: 2200, y: 240, cls:"c2 face"},
+    {x: 1860, y: 520, cls:"c3 face"},
+    {x: 1960, y: 520, cls:"c4 blank"},
 
-    // special zone decoys (to troll him near the special)
-    {x: 2260, y: 520, cls:"c1 blank"},
-    {x: 2280, y: 240, cls:"c4 face"},
+    // special zone trolls
+    {x: 2240, y: 520, cls:"c1 blank"},
+    {x: 2260, y: 240, cls:"c4 face"},
     {x: 2360, y: 520, cls:"c3 blank"},
     {x: 2380, y: 260, cls:"c2 blank"},
-    {x: 2400, y: 420, cls:"c1 face"}
+    {x: 2400, y: 420, cls:"c1 face"},
+    {x: 2280, y: 420, cls:"c3 face"},
+    {x: 2400, y: 220, cls:"c2 face"}
   ];
 
   const map = document.getElementById("map");
@@ -402,11 +407,11 @@ body{
 
   // Audio
   let audioCtx = null;
-  function unlockAudio() {
+  function unlockAudio(){
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") audioCtx.resume();
   }
-  function tone({freq=600, dur=0.12, type="sine", gain=0.22, glideTo=null}) {
+  function tone({freq=600, dur=0.12, type="sine", gain=0.22, glideTo=null}){
     if (!audioCtx) return;
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
@@ -444,37 +449,41 @@ body{
   }
   function updateCounter(){ foundN.textContent = String(foundSet.size); }
 
-  // Bubble (✅ supports <br>)
+  // Bubble (supports <br>)
   function openBubble({msg, isSpecial=false, sub="", showKeep=true}){
-    bubbleMsg.innerHTML = msg;                 // <— IMPORTANT for <br>
+    bubbleMsg.innerHTML = msg;
     bubbleSub.textContent = sub;
     bubbleHeart.style.display = isSpecial ? "block" : "none";
     nextBtn.style.display = showKeep ? "inline-block" : "none";
     bubbleBack.style.display = "flex";
   }
   function closeBubble(){
-  bubbleBack.style.display = "none";
+    bubbleBack.style.display = "none";
 
-  // if we just completed the hunt, show the final message AFTER closing the last one
-  if (pendingFinal){
-    pendingFinal = false;
-    confettiPop();
-    yeySound();
-    openBubble({
-      msg: "yey!! you found them all<br>(including me)!",
-      sub: "ok… come collect your reward 😌",
-      showKeep: false
-    });
+    // Show final message AFTER closing last puff message (prevents overlap)
+    if (pendingFinal){
+      pendingFinal = false;
+      confettiPop();
+      yeySound();
+      openBubble({
+        msg: "yey!! you found them all<br>(including me)!",
+        sub: "ok… come collect your reward 😌",
+        showKeep: false
+      });
+    }
   }
-}
+  closeBtn.addEventListener("click", closeBubble);
+  nextBtn.addEventListener("click", closeBubble);
+  bubbleBack.addEventListener("click", (e)=>{ if(e.target === bubbleBack) closeBubble(); });
 
   // Stars
   function addStars(){
+    const h = map.clientHeight || 560;
     for(let i=0;i<46;i++){
       const s = document.createElement("div");
       s.className = "star";
       s.style.left = (60 + Math.random()*2280) + "px";
-      s.style.top  = (60 + Math.random()*(map.clientHeight-120)) + "px";
+      s.style.top  = (60 + Math.random()*(h-120)) + "px";
       s.style.transform = `rotate(${Math.random()*60}deg)`;
       s.style.opacity = String(0.35 + Math.random()*0.35);
       map.appendChild(s);
@@ -527,13 +536,15 @@ body{
 
     openBubble({
       msg: messages[idx],
-      isSpecial,
-      sub: isSpecial ? "rare puff found." : "keep going… more hiding."
+      isSpecial: isSpecial,
+      sub: isSpecial ? "rare puff found." : "keep going… more hiding.",
+      showKeep: true
     });
 
     if(foundSet.size === TOTAL){
-  pendingFinal = true; // final message will appear after he closes the last puff message
-}
+      pendingFinal = true; // final will show after bubble is closed
+    }
+  }
 
   // Decoy puff
   function createDecoy(d){
@@ -557,13 +568,14 @@ body{
 
     // decoys first
     for(const d of decoys) map.appendChild(createDecoy(d));
-    // real puffs last
+    // real puffs last (so they can sit above decoys)
     for(let i=0;i<TOTAL;i++) map.appendChild(createRealPuff(i));
   }
 
   // Confetti POP (burst)
   const canvas = document.getElementById("confetti");
   const ctx = canvas.getContext("2d");
+
   function resizeCanvas(){
     canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
     canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
@@ -632,9 +644,10 @@ body{
   resetBtn.addEventListener("click", () => {
     localStorage.removeItem(LS_KEY);
     foundSet = new Set();
+    pendingFinal = false;
     updateCounter();
     render();
-    openBubble({ msg: "reset done.", sub: "puffs are hiding again 😌" });
+    openBubble({ msg: "reset done.", sub: "puffs are hiding again 😌", showKeep: true });
   });
 
   // Init
@@ -651,5 +664,4 @@ body{
 })();
 </script>
 </body>
-</html>
-
+  </html>
