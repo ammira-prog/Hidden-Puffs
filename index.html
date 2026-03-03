@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Find the Hidden Mira Puffs</title>
+
+<style>
+:root{
+  --bg1:#fff7fb;
+  --bg2:#eef9ff;
+  --pink:#ffc1de;
+  --pink2:#ff9fcb;
+  --card:#ffffffee;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg,var(--bg1),var(--bg2));
+  overflow:hidden;
+}
+
+.title{
+  position:fixed;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  font-weight:800;
+  font-size:20px;
+  letter-spacing:.5px;
+  background:linear-gradient(90deg,#ffb6d6,#bde6ff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  opacity:0;
+  transition:opacity 1.2s ease;
+  z-index:10;
+}
+
+.mapWrap{
+  position:fixed;
+  inset:0;
+  padding-top:70px;
+  overflow:auto;
+}
+
+.map{
+  width:2200px;
+  height:1400px;
+  position:relative;
+}
+
+.puff{
+  position:absolute;
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ffe9f4 0 40%,var(--pink) 60%,var(--pink2) 100%);
+  box-shadow:0 14px 30px rgba(0,0,0,.15);
+  transform:translate(-50%,-50%);
+  cursor:pointer;
+  transition:transform .15s ease, opacity .2s ease;
+}
+
+.puff:active{
+  transform:translate(-50%,-50%) scale(.9);
+}
+
+.puff::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+  radial-gradient(circle at 38% 50%,#222 0 4px,transparent 5px),
+  radial-gradient(circle at 62% 50%,#222 0 4px,transparent 5px),
+  radial-gradient(circle at 50% 63%,rgba(255,120,170,.9) 0 6px,transparent 7px);
+}
+
+.special{
+  width:72px;
+  height:72px;
+}
+
+.special::after{
+  content:"";
+  position:absolute;
+  inset:-14px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,240,180,.8),transparent 70%);
+  animation:pulse 1.6s infinite;
+}
+
+@keyframes pulse{
+  0%,100%{transform:scale(.95);opacity:.7}
+  50%{transform:scale(1.1);opacity:1}
+}
+
+.bubble{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  background:var(--card);
+  padding:22px 26px;
+  border-radius:28px;
+  box-shadow:0 20px 50px rgba(0,0,0,.2);
+  font-weight:700;
+  font-size:20px;
+  text-align:center;
+  opacity:0;
+  animation:fadeIn .25s forwards;
+}
+
+@keyframes fadeIn{
+  to{opacity:1}
+}
+
+.heart{
+  margin-top:8px;
+  font-size:18px;
+}
+
+.confetti{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="title">Find the Hidden Mira Puffs</div>
+<div class="mapWrap" id="wrap">
+  <div class="map" id="map"></div>
+</div>
+
+<canvas class="confetti" id="confetti"></canvas>
+
+<script>
+const messages=[
+"you're adorable",
+"you're my mvp",
+"you're my favorite chaos",
+"i'm biased and rooting for you always..",
+"you're the risk i'm willing to take..",
+"pleasant distraction i can't ignore",
+"grateful to have you in my dm",
+"looking forward to those yummy hugs ♡"
+];
+
+const positions=[
+[200,300],[700,400],[1100,250],[1500,600],
+[1900,350],[600,1000],[1300,1100],[2000,1150]
+];
+
+let found=0;
+let audioUnlocked=false;
+
+const map=document.getElementById("map");
+const wrap=document.getElementById("wrap");
+
+positions.forEach((pos,i)=>{
+  const puff=document.createElement("div");
+  puff.className="puff"+(i===7?" special":"");
+  puff.style.left=pos[0]+"px";
+  puff.style.top=pos[1]+"px";
+
+  puff.onclick=()=>{
+    if(!audioUnlocked){
+      audioUnlocked=true;
+    }
+
+    popSound(i===7);
+    puff.style.opacity="0";
+    setTimeout(()=>puff.remove(),200);
+
+    showMessage(messages[i],i===7);
+    found++;
+
+    if(found===8){
+      setTimeout(()=>{
+        showMessage("yey!! you found them all (including me)!");
+        confetti();
+      },600);
+    }
+  };
+  map.appendChild(puff);
+});
+
+function showMessage(text,isSpecial=false){
+  const bubble=document.createElement("div");
+  bubble.className="bubble";
+  bubble.innerHTML=text+(isSpecial?'<div class="heart">♡</div>':"");
+  document.body.appendChild(bubble);
+  setTimeout(()=>bubble.remove(),2000);
+}
+
+function popSound(special=false){
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const o=ctx.createOscillator();
+  const g=ctx.createGain();
+  o.connect(g);
+  g.connect(ctx.destination);
+  o.type="sine";
+  o.frequency.value=special?800:600;
+  g.gain.setValueAtTime(.3,ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.25);
+  o.start();
+  o.stop(ctx.currentTime+.25);
+}
+
+function confetti(){
+  const canvas=document.getElementById("confetti");
+  const ctx=canvas.getContext("2d");
+  canvas.width=innerWidth;
+  canvas.height=innerHeight;
+  let pieces=Array.from({length:150},()=>({
+    x:Math.random()*canvas.width,
+    y:-20,
+    r:4+Math.random()*4,
+    d:Math.random()*canvas.height
+  }));
+  let frame=0;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      ctx.fillStyle=`hsl(${Math.random()*360},80%,75%)`;
+      ctx.fillRect(p.x,p.y,p.r,p.r);
+      p.y+=3;
+    });
+    frame++;
+    if(frame<80)requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+/* tiny cinematic pan */
+window.onload=()=>{
+  document.querySelector(".title").style.opacity="1";
+  setTimeout(()=>{
+    wrap.scrollTo({left:400,top:250,behavior:"smooth"});
+  },800);
+};
+</script>
+
+</body>
+</html>
