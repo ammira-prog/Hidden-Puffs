@@ -39,20 +39,17 @@ body{
   justify-content:space-between;
   gap:10px;
   z-index:10;
-  pointer-events:none;
 }
 .chip{
-  pointer-events:auto;
   backdrop-filter: blur(10px);
-  background: rgba(255,255,255,.84);
+  background: rgba(255,255,255,.86);
   border:1px solid rgba(0,0,0,.08);
   border-radius:999px;
   padding:10px 14px;
   box-shadow: 0 10px 30px rgba(0,0,0,.14);
-  font-weight:900;
+  font-weight:950;
 }
 .btn{
-  pointer-events:auto;
   border:none;
   border-radius:999px;
   padding:10px 14px;
@@ -64,7 +61,7 @@ body{
 }
 .btn:active{ transform: scale(.98); }
 
-/* Title + instruction */
+/* Header */
 .header{
   position:fixed;
   top:58px; left:12px; right:12px;
@@ -99,7 +96,7 @@ body{
   opacity:.84;
 }
 
-/* Horizontal-only map area */
+/* Horizontal map only */
 .mapWrap{
   position:fixed;
   left:0; right:0;
@@ -112,12 +109,9 @@ body{
   touch-action: pan-x;
   padding: 14px 14px 18px;
 }
-
-/* Map */
 .map{
   position:relative;
-  height: calc(100vh - 170px);
-  min-height: 520px;
+  height: 560px;          /* fixed -> reliable on mobile */
   width: 2400px;
   border-radius: 26px;
   background:
@@ -141,7 +135,7 @@ body{
   pointer-events:none;
 }
 
-/* Plush puff base */
+/* plush puff base */
 .puff{
   position:absolute;
   width:64px; height:64px;
@@ -159,7 +153,7 @@ body{
 }
 .puff:active{ transform: translate(-50%,-50%) scale(.92); }
 
-/* Real puff face */
+/* real face */
 .puff.real::before{
   content:"";
   position:absolute;
@@ -172,8 +166,6 @@ body{
     radial-gradient(circle at 50% 63%, rgba(255,120,170,.9) 0 6px, transparent 7px);
   opacity:.95;
 }
-
-/* curl */
 .curl{
   position:absolute;
   width:18px; height:18px;
@@ -186,7 +178,7 @@ body{
   opacity:.75;
 }
 
-/* Special puff */
+/* special */
 .puff.special{ width:72px; height:72px; }
 .puff.special .aura{
   position:absolute;
@@ -201,7 +193,7 @@ body{
   50%{ transform: scale(1.08); opacity:1; }
 }
 
-/* Decoys */
+/* decoys */
 .puff.decoy{ opacity:.92; filter: saturate(1.08); }
 .puff.decoy.face::before{
   content:"";
@@ -219,7 +211,7 @@ body{
 .puff.c3{ background: radial-gradient(circle at 35% 28%, #fffaf2 0 42%, #ffe2b8 65%, #ffc57a 100%); }
 .puff.c4{ background: radial-gradient(circle at 35% 28%, #fdf6ff 0 42%, #e6c8ff 65%, #c79bff 100%); }
 
-/* Bubble */
+/* bubble */
 .bubbleBack{
   position:fixed;
   inset:0;
@@ -240,36 +232,13 @@ body{
   padding:18px 18px 14px;
   text-align:center;
 }
-.msg{
-  margin:0;
-  font-size:20px;
-  font-weight:950;
-}
-.heart{
-  margin-top:8px;
-  font-weight:950;
-  font-size:18px;
-  opacity:.85;
-}
-.sub{
-  margin:10px 0 0;
-  font-size:13px;
-  font-weight:850;
-  opacity:.72;
-}
-.actions{
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  margin-top:14px;
-}
-.ghost{
-  background: rgba(255,255,255,.8);
-  border:1px solid rgba(0,0,0,.10);
-  box-shadow:none;
-}
+.msg{ margin:0; font-size:20px; font-weight:950; }
+.heart{ margin-top:8px; font-weight:950; font-size:18px; opacity:.85; }
+.sub{ margin:10px 0 0; font-size:13px; font-weight:850; opacity:.72; }
+.actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:14px; }
+.ghost{ background: rgba(255,255,255,.8); border:1px solid rgba(0,0,0,.10); box-shadow:none; }
 
-/* Confetti pop */
+/* confetti */
 #confetti{
   position:fixed;
   inset:0;
@@ -282,7 +251,9 @@ body{
 
 <body>
   <div class="hud">
-    <div class="chip">found <span id="foundN">0</span>/8</div>
+    <div class="chip">
+      found <span id="foundN">0</span>/8 · js <span id="jsOK">…</span>
+    </div>
     <button class="btn" id="resetBtn">reset</button>
   </div>
 
@@ -314,7 +285,7 @@ body{
 <script>
 (() => {
   const TOTAL = 8;
-  const LS_KEY = "mira_puff_hunt_v5_found";
+  const LS_KEY = "mira_puff_hunt_v6_found";
 
   const messages = [
     "you're adorable",
@@ -327,7 +298,7 @@ body{
     "looking forward to those yummy hugs ♡"
   ];
 
-  // Real puffs (special far right, separated)
+  // Real puffs (special far right)
   const realPositions = [
     {x: 220,  y: 220},
     {x: 560,  y: 360},
@@ -336,64 +307,37 @@ body{
     {x: 1680, y: 260},
     {x: 1900, y: 420},
     {x: 1120, y: 520},
-    {x: 2320, y: 320} // SPECIAL (separated)
+    {x: 2320, y: 320} // special
   ];
 
-  // More decoys (lots)
+  // Decoys (many)
   const decoys = [
-    // left cluster
-    {x: 140, y: 420, cls:"c2 face"},
-    {x: 260, y: 520, cls:"c3 blank"},
-    {x: 320, y: 260, cls:"c1 face"},
-    {x: 420, y: 320, cls:"c4 blank"},
-    {x: 520, y: 220, cls:"c2 blank"},
-    {x: 640, y: 520, cls:"c1 blank"},
-    {x: 720, y: 280, cls:"c3 face"},
-    {x: 820, y: 420, cls:"c4 face"},
-    {x: 900, y: 220, cls:"c2 face"},
-    {x: 460, y: 460, cls:"c3 face"},
-    {x: 600, y: 340, cls:"c4 blank"},
+    {x: 140, y: 420, cls:"c2 face"}, {x: 260, y: 520, cls:"c3 blank"}, {x: 320, y: 260, cls:"c1 face"},
+    {x: 420, y: 320, cls:"c4 blank"}, {x: 520, y: 220, cls:"c2 blank"}, {x: 640, y: 520, cls:"c1 blank"},
+    {x: 720, y: 280, cls:"c3 face"}, {x: 820, y: 420, cls:"c4 face"}, {x: 900, y: 220, cls:"c2 face"},
+    {x: 460, y: 460, cls:"c3 face"}, {x: 600, y: 340, cls:"c4 blank"},
 
-    // mid
-    {x: 1040, y: 380, cls:"c1 blank"},
-    {x: 1100, y: 240, cls:"c4 face"},
-    {x: 1200, y: 420, cls:"c3 blank"},
-    {x: 1240, y: 300, cls:"c2 blank"},
-    {x: 1400, y: 260, cls:"c1 face"},
-    {x: 1460, y: 520, cls:"c4 blank"},
-    {x: 1520, y: 340, cls:"c3 face"},
-    {x: 1580, y: 460, cls:"c2 face"},
-    {x: 1620, y: 520, cls:"c1 blank"},
-    {x: 980,  y: 520, cls:"c2 face"},
-    {x: 1300, y: 240, cls:"c3 blank"},
-    {x: 1360, y: 520, cls:"c2 blank"},
+    {x: 1040, y: 380, cls:"c1 blank"}, {x: 1100, y: 240, cls:"c4 face"}, {x: 1200, y: 420, cls:"c3 blank"},
+    {x: 1240, y: 300, cls:"c2 blank"}, {x: 1400, y: 260, cls:"c1 face"}, {x: 1460, y: 520, cls:"c4 blank"},
+    {x: 1520, y: 340, cls:"c3 face"}, {x: 1580, y: 460, cls:"c2 face"}, {x: 1620, y: 520, cls:"c1 blank"},
+    {x: 980,  y: 520, cls:"c2 face"}, {x: 1300, y: 240, cls:"c3 blank"}, {x: 1360, y: 520, cls:"c2 blank"},
     {x: 1500, y: 240, cls:"c4 face"},
 
-    // right (pre-special)
-    {x: 1760, y: 360, cls:"c4 face"},
-    {x: 1820, y: 240, cls:"c3 blank"},
-    {x: 1980, y: 260, cls:"c2 blank"},
-    {x: 2040, y: 520, cls:"c1 face"},
-    {x: 2100, y: 340, cls:"c3 face"},
-    {x: 2160, y: 460, cls:"c4 blank"},
-    {x: 2200, y: 240, cls:"c2 face"},
-    {x: 1860, y: 520, cls:"c3 face"},
-    {x: 1960, y: 520, cls:"c4 blank"},
+    {x: 1760, y: 360, cls:"c4 face"}, {x: 1820, y: 240, cls:"c3 blank"}, {x: 1980, y: 260, cls:"c2 blank"},
+    {x: 2040, y: 520, cls:"c1 face"}, {x: 2100, y: 340, cls:"c3 face"}, {x: 2160, y: 460, cls:"c4 blank"},
+    {x: 2200, y: 240, cls:"c2 face"}, {x: 1860, y: 520, cls:"c3 face"}, {x: 1960, y: 520, cls:"c4 blank"},
 
-    // special zone trolls
-    {x: 2240, y: 520, cls:"c1 blank"},
-    {x: 2260, y: 240, cls:"c4 face"},
-    {x: 2360, y: 520, cls:"c3 blank"},
-    {x: 2380, y: 260, cls:"c2 blank"},
-    {x: 2400, y: 420, cls:"c1 face"},
-    {x: 2280, y: 420, cls:"c3 face"},
+    {x: 2240, y: 520, cls:"c1 blank"}, {x: 2260, y: 240, cls:"c4 face"}, {x: 2360, y: 520, cls:"c3 blank"},
+    {x: 2380, y: 260, cls:"c2 blank"}, {x: 2400, y: 420, cls:"c1 face"}, {x: 2280, y: 420, cls:"c3 face"},
     {x: 2400, y: 220, cls:"c2 face"}
   ];
 
+  // Elements
   const map = document.getElementById("map");
   const wrap = document.getElementById("wrap");
   const foundN = document.getElementById("foundN");
   const resetBtn = document.getElementById("resetBtn");
+  const jsOK = document.getElementById("jsOK");
 
   const bubbleBack = document.getElementById("bubbleBack");
   const bubbleMsg = document.getElementById("bubbleMsg");
@@ -402,6 +346,7 @@ body{
   const closeBtn = document.getElementById("closeBtn");
   const nextBtn = document.getElementById("nextBtn");
 
+  // State
   let foundSet = new Set();
   let pendingFinal = false;
 
@@ -428,9 +373,7 @@ body{
     tone({freq: isSpecial ? 520 : 460, glideTo: isSpecial ? 980 : 860, dur: 0.11, type:"sine", gain: 0.20});
     tone({freq: isSpecial ? 1200 : 1050, glideTo: isSpecial ? 900 : 820, dur: 0.07, type:"triangle", gain: 0.07});
   }
-  function tinyNope(){
-    tone({freq: 420, glideTo: 320, dur: 0.10, type:"sine", gain: 0.12});
-  }
+  function tinyNope(){ tone({freq: 420, glideTo: 320, dur: 0.10, type:"sine", gain: 0.12}); }
   function yeySound(){
     tone({freq: 523.25, dur: 0.10, type:"sine", gain: 0.14});
     setTimeout(() => tone({freq: 659.25, dur: 0.11, type:"sine", gain: 0.14}), 90);
@@ -447,9 +390,10 @@ body{
       if(Array.isArray(arr)) foundSet = new Set(arr);
     }catch(e){}
   }
+
   function updateCounter(){ foundN.textContent = String(foundSet.size); }
 
-  // Bubble (supports <br>)
+  // Bubble
   function openBubble({msg, isSpecial=false, sub="", showKeep=true}){
     bubbleMsg.innerHTML = msg;
     bubbleSub.textContent = sub;
@@ -459,8 +403,6 @@ body{
   }
   function closeBubble(){
     bubbleBack.style.display = "none";
-
-    // Show final message AFTER closing last puff message (prevents overlap)
     if (pendingFinal){
       pendingFinal = false;
       confettiPop();
@@ -478,19 +420,18 @@ body{
 
   // Stars
   function addStars(){
-    const h = map.clientHeight || 560;
     for(let i=0;i<46;i++){
       const s = document.createElement("div");
       s.className = "star";
       s.style.left = (60 + Math.random()*2280) + "px";
-      s.style.top  = (60 + Math.random()*(h-120)) + "px";
+      s.style.top  = (60 + Math.random()*(560-120)) + "px";
       s.style.transform = `rotate(${Math.random()*60}deg)`;
       s.style.opacity = String(0.35 + Math.random()*0.35);
       map.appendChild(s);
     }
   }
 
-  // Real puff
+  // Build puffs
   function createRealPuff(i){
     const isSpecial = (i === TOTAL-1);
     const puff = document.createElement("div");
@@ -513,131 +454,101 @@ body{
 
     puff.addEventListener("click", () => {
       unlockAudio();
-      onFindReal(puff);
+      const idx = Number(puff.dataset.idx);
+      if (foundSet.has(idx)) return;
+
+      foundSet.add(idx);
+      save();
+      updateCounter();
+
+      popSound(isSpecial);
+
+      puff.style.opacity = "0";
+      puff.style.transform = "translate(-50%,-50%) scale(.86)";
+      setTimeout(()=> puff.remove(), 160);
+
+      openBubble({
+        msg: messages[idx],
+        isSpecial: isSpecial,
+        sub: isSpecial ? "rare puff found." : "keep going… more hiding.",
+        showKeep: true
+      });
+
+      if(foundSet.size === TOTAL){
+        pendingFinal = true; // show finale after closing
+      }
     });
 
     return puff;
   }
 
-  function onFindReal(puffEl){
-    const idx = Number(puffEl.dataset.idx);
-    if(foundSet.has(idx)) return;
-    const isSpecial = (idx === TOTAL-1);
-
-    foundSet.add(idx);
-    save();
-    updateCounter();
-
-    popSound(isSpecial);
-
-    puffEl.style.opacity = "0";
-    puffEl.style.transform = "translate(-50%,-50%) scale(.86)";
-    setTimeout(()=> puffEl.remove(), 160);
-
-    openBubble({
-      msg: messages[idx],
-      isSpecial: isSpecial,
-      sub: isSpecial ? "rare puff found." : "keep going… more hiding.",
-      showKeep: true
-    });
-
-    if(foundSet.size === TOTAL){
-      pendingFinal = true; // final will show after bubble is closed
-    }
-  }
-
-  // Decoy puff
   function createDecoy(d){
     const puff = document.createElement("div");
     puff.className = "puff decoy " + d.cls;
     puff.style.left = d.x + "px";
     puff.style.top  = d.y + "px";
-
     puff.addEventListener("click", () => {
       unlockAudio();
       tinyNope();
       openBubble({ msg: "not this one 😌", sub: "keep hunting…", showKeep: true });
     });
-
     return puff;
   }
 
   function render(){
     map.innerHTML = "";
     addStars();
-
-    // decoys first
+    // decoys always render
     for(const d of decoys) map.appendChild(createDecoy(d));
-    // real puffs last (so they can sit above decoys)
+    // real puffs render (unless already found)
     for(let i=0;i<TOTAL;i++) map.appendChild(createRealPuff(i));
   }
 
-  // Confetti POP (burst)
+  // Confetti pop
   const canvas = document.getElementById("confetti");
   const ctx = canvas.getContext("2d");
-
   function resizeCanvas(){
     canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
     canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
     ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
   }
-  window.addEventListener("resize", resizeCanvas);
-
   function confettiPop(){
     resizeCanvas();
     canvas.style.display = "block";
-
-    const cx = window.innerWidth/2;
-    const cy = window.innerHeight/2;
+    const cx = window.innerWidth/2, cy = window.innerHeight/2;
 
     const pieces = Array.from({length: 170}, () => {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 3 + Math.random() * 7;
-      return {
-        x: cx, y: cy,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        size: 3 + Math.random() * 5,
-        life: 55 + Math.random() * 25,
-        rot: Math.random() * Math.PI,
-        vr: (-0.25 + Math.random()*0.5)
-      };
+      const a = Math.random()*Math.PI*2;
+      const s = 3 + Math.random()*7;
+      return {x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,size:3+Math.random()*5,life:55+Math.random()*25,rot:Math.random()*Math.PI,vr:-0.25+Math.random()*0.5};
     });
 
     let frame = 0;
-    function tick(){
+    (function tick(){
       frame++;
       ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
 
       for(const p of pieces){
-        p.x += p.vx;
-        p.y += p.vy;
+        p.x += p.vx; p.y += p.vy;
         p.vy += 0.05;
-        p.vx *= 0.99;
-        p.vy *= 0.99;
-        p.rot += p.vr;
-        p.life -= 1;
+        p.vx *= 0.99; p.vy *= 0.99;
+        p.rot += p.vr; p.life -= 1;
 
         if(p.life > 0){
-          const alpha = Math.min(1, p.life / 40);
+          const alpha = Math.min(1, p.life/40);
           ctx.save();
           ctx.globalAlpha = alpha;
-          ctx.translate(p.x, p.y);
+          ctx.translate(p.x,p.y);
           ctx.rotate(p.rot);
-          ctx.fillStyle = `hsl(${Math.floor(Math.random()*360)}, 85%, 75%)`;
-          ctx.fillRect(-p.size, -p.size/2, p.size*2, p.size);
+          ctx.fillStyle = `hsl(${Math.floor(Math.random()*360)},85%,75%)`;
+          ctx.fillRect(-p.size,-p.size/2,p.size*2,p.size);
           ctx.restore();
         }
       }
 
-      if(frame < 70){
-        requestAnimationFrame(tick);
-      }else{
-        canvas.style.display = "none";
-        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-      }
-    }
-    tick();
+      if(frame < 70) requestAnimationFrame(tick);
+      else { canvas.style.display="none"; ctx.clearRect(0,0,window.innerWidth, window.innerHeight); }
+    })();
   }
 
   // Reset
@@ -654,8 +565,9 @@ body{
   load();
   updateCounter();
   render();
+  jsOK.textContent = "✓";
 
-  // Soft pan intro (horizontal)
+  // soft pan
   setTimeout(() => {
     wrap.scrollLeft = 40;
     setTimeout(() => wrap.scrollTo({left: 360, behavior: "smooth"}), 450);
