@@ -88,8 +88,6 @@ body{
   font-size:22px;
   line-height:1.1;
   white-space: nowrap;
-
-  /* HIGH CONTRAST title (no faint gradient) */
   color:#3b1b7a;
   text-shadow:
     0 2px 0 rgba(255,255,255,.65),
@@ -208,11 +206,8 @@ body{
   50%{ transform: scale(1.08); opacity:1; }
 }
 
-/* Decoy puffs: different colors + some faceless */
-.puff.decoy{
-  opacity:.92;
-  filter: saturate(1.08);
-}
+/* Decoy colors + faces */
+.puff.decoy{ opacity:.92; filter: saturate(1.08); }
 .puff.decoy.face::before{
   content:"";
   position:absolute;
@@ -222,7 +217,7 @@ body{
     radial-gradient(circle at 62% 50%, rgba(0,0,0,.25) 0 3px, transparent 4px);
   opacity:.55;
 }
-.puff.decoy.blank::before{ content:""; } /* faceless */
+.puff.decoy.blank::before{ content:""; }
 
 .puff.c1{ background: radial-gradient(circle at 35% 28%, #f6fff9 0 42%, #bff6d7 65%, #8fecc3 100%); }
 .puff.c2{ background: radial-gradient(circle at 35% 28%, #f7fbff 0 42%, #cbe4ff 65%, #9cc7ff 100%); }
@@ -292,8 +287,8 @@ body{
 
 <body>
   <div class="hud">
-    <div class="chip" id="counterChip">found <span id="foundN">0</span>/8</div>
-    <button class="btn" id="resetBtn" title="reset">reset</button>
+    <div class="chip">found <span id="foundN">0</span>/8</div>
+    <button class="btn" id="resetBtn">reset</button>
   </div>
 
   <div class="header">
@@ -324,7 +319,7 @@ body{
 <script>
 (() => {
   const TOTAL = 8;
-  const LS_KEY = "mira_puff_hunt_v3_found";
+  const LS_KEY = "mira_puff_hunt_v4_found";
 
   const messages = [
     "you're adorable",
@@ -337,28 +332,57 @@ body{
     "looking forward to those yummy hugs ♡"
   ];
 
-  // Real puffs (8)
+  // ✅ Real puffs (special moved far away from the cluster)
   const realPositions = [
     {x: 220,  y: 220},
     {x: 560,  y: 360},
     {x: 980,  y: 260},
     {x: 1320, y: 380},
-    {x: 1700, y: 260},
-    {x: 2060, y: 420},
-    {x: 1180, y: 520},
-    {x: 1940, y: 520} // special
+    {x: 1680, y: 260},
+    {x: 1900, y: 420},
+    {x: 1120, y: 520},
+    {x: 2320, y: 340} // ⭐ SPECIAL: far right, separated
   ];
 
-  // Decoy puffs (don’t count) — mixed colors + some faceless
+  // ✅ LOTS more decoys (doesn't count)
   const decoys = [
-    {x: 420, y: 240, cls:"c2 face"},
-    {x: 780, y: 520, cls:"c1 blank"},
-    {x: 1100,y: 420, cls:"c4 face"},
-    {x: 1460,y: 260, cls:"c3 blank"},
-    {x: 1580,y: 520, cls:"c2 blank"},
-    {x: 2260,y: 300, cls:"c1 face"},
-    {x: 900, y: 340, cls:"c3 face"},
-    {x: 1820,y: 380, cls:"c4 blank"}
+    // left area
+    {x: 140, y: 420, cls:"c2 face"},
+    {x: 300, y: 520, cls:"c3 blank"},
+    {x: 360, y: 260, cls:"c1 face"},
+    {x: 420, y: 320, cls:"c4 blank"},
+    {x: 520, y: 220, cls:"c2 blank"},
+    {x: 640, y: 520, cls:"c1 blank"},
+    {x: 720, y: 280, cls:"c3 face"},
+    {x: 820, y: 420, cls:"c4 face"},
+    {x: 900, y: 220, cls:"c2 face"},
+
+    // mid area
+    {x: 1040, y: 380, cls:"c1 blank"},
+    {x: 1100, y: 240, cls:"c4 face"},
+    {x: 1200, y: 420, cls:"c3 blank"},
+    {x: 1240, y: 300, cls:"c2 blank"},
+    {x: 1400, y: 260, cls:"c1 face"},
+    {x: 1460, y: 520, cls:"c4 blank"},
+    {x: 1520, y: 340, cls:"c3 face"},
+    {x: 1580, y: 460, cls:"c2 face"},
+    {x: 1620, y: 520, cls:"c1 blank"},
+
+    // right-ish (before special zone)
+    {x: 1760, y: 360, cls:"c4 face"},
+    {x: 1820, y: 240, cls:"c3 blank"},
+    {x: 1980, y: 260, cls:"c2 blank"},
+    {x: 2040, y: 520, cls:"c1 face"},
+    {x: 2100, y: 340, cls:"c3 face"},
+    {x: 2160, y: 460, cls:"c4 blank"},
+    {x: 2200, y: 240, cls:"c2 face"},
+
+    // special zone decoys (to troll him near the special)
+    {x: 2260, y: 520, cls:"c1 blank"},
+    {x: 2280, y: 240, cls:"c4 face"},
+    {x: 2360, y: 520, cls:"c3 blank"},
+    {x: 2380, y: 260, cls:"c2 blank"},
+    {x: 2400, y: 420, cls:"c1 face"}
   ];
 
   const map = document.getElementById("map");
@@ -399,7 +423,6 @@ body{
     tone({freq: isSpecial ? 1200 : 1050, glideTo: isSpecial ? 900 : 820, dur: 0.07, type:"triangle", gain: 0.07});
   }
   function tinyNope(){
-    // a soft "nope" blip
     tone({freq: 420, glideTo: 320, dur: 0.10, type:"sine", gain: 0.12});
   }
   function yeySound(){
@@ -418,15 +441,14 @@ body{
       if(Array.isArray(arr)) foundSet = new Set(arr);
     }catch(e){}
   }
-
   function updateCounter(){ foundN.textContent = String(foundSet.size); }
 
-  // Bubble
+  // Bubble (✅ supports <br>)
   function openBubble({msg, isSpecial=false, sub="", showKeep=true}){
-    bubbleMsg.innerHTML = msg;
+    bubbleMsg.innerHTML = msg;                 // <— IMPORTANT for <br>
     bubbleSub.textContent = sub;
     bubbleHeart.style.display = isSpecial ? "block" : "none";
-    nextBtn.style.display = showKeep ? "inline-block" : "none"; // ✅ hide on completion
+    nextBtn.style.display = showKeep ? "inline-block" : "none";
     bubbleBack.style.display = "flex";
   }
   function closeBubble(){ bubbleBack.style.display = "none"; }
@@ -436,7 +458,7 @@ body{
 
   // Stars
   function addStars(){
-    for(let i=0;i<40;i++){
+    for(let i=0;i<46;i++){
       const s = document.createElement("div");
       s.className = "star";
       s.style.left = (60 + Math.random()*2280) + "px";
@@ -503,9 +525,8 @@ body{
         yeySound();
         openBubble({
           msg: "yey!! you found them all<br>(including me)!",
-          isSpecial: false,
           sub: "ok… come collect your reward 😌",
-          showKeep: false // ✅ remove keep hunting on final
+          showKeep: false
         });
       }, 260);
     }
@@ -520,13 +541,8 @@ body{
 
     puff.addEventListener("click", () => {
       unlockAudio();
-      // tiny feedback + message, but don't count
       tinyNope();
-      openBubble({
-        msg: "not this one 😌",
-        sub: "keep hunting…",
-        showKeep: true
-      });
+      openBubble({ msg: "not this one 😌", sub: "keep hunting…", showKeep: true });
     });
 
     return puff;
@@ -536,10 +552,9 @@ body{
     map.innerHTML = "";
     addStars();
 
-    // add decoys first (so real puffs can overlap on top sometimes)
+    // decoys first
     for(const d of decoys) map.appendChild(createDecoy(d));
-
-    // add real puffs
+    // real puffs last
     for(let i=0;i<TOTAL;i++) map.appendChild(createRealPuff(i));
   }
 
@@ -560,7 +575,7 @@ body{
     const cx = window.innerWidth/2;
     const cy = window.innerHeight/2;
 
-    const pieces = Array.from({length: 160}, () => {
+    const pieces = Array.from({length: 170}, () => {
       const angle = Math.random() * Math.PI * 2;
       const speed = 3 + Math.random() * 7;
       return {
@@ -633,4 +648,4 @@ body{
 })();
 </script>
 </body>
-  </html>
+</html>
