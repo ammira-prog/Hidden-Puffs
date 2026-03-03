@@ -2,248 +2,594 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>Find the Hidden Mira Puffs</title>
 
 <style>
 :root{
-  --bg1:#fff7fb;
-  --bg2:#eef9ff;
+  --card: rgba(255,255,255,.86);
+  --ink: #2b2b2b;
   --pink:#ffc1de;
   --pink2:#ff9fcb;
-  --card:#ffffffee;
+  --lav:#d9c8ff;
+  --lav2:#bca6ff;
 }
 
-*{box-sizing:border-box}
-body{
+*{ box-sizing:border-box; }
+html, body{
+  height:100%;
   margin:0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg,var(--bg1),var(--bg2));
+  overflow:hidden; /* no page scroll */
+  overscroll-behavior: none; /* reduce pull-to-refresh */
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color:var(--ink);
+}
+
+/* Purple dreamy background */
+body{
+  background:
+    radial-gradient(900px 700px at 20% 15%, rgba(255,193,222,.55), transparent 60%),
+    radial-gradient(900px 700px at 85% 25%, rgba(185,220,255,.55), transparent 60%),
+    radial-gradient(900px 700px at 55% 90%, rgba(255,240,180,.35), transparent 60%),
+    linear-gradient(135deg, #7d5cff, #b79cff 55%, #d7ccff);
+}
+
+/* HUD */
+.hud{
+  position:fixed;
+  top:12px; left:12px; right:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  z-index:10;
+  pointer-events:none;
+}
+.chip{
+  pointer-events:auto;
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,.82);
+  border:1px solid rgba(0,0,0,.08);
+  border-radius:999px;
+  padding:10px 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.14);
+  font-weight:750;
+}
+.btn{
+  pointer-events:auto;
+  border:none;
+  border-radius:999px;
+  padding:10px 14px;
+  background: linear-gradient(135deg, rgba(255,193,222,.95), rgba(185,220,255,.95));
+  box-shadow: 0 10px 30px rgba(0,0,0,.14);
+  font-weight:800;
+  cursor:pointer;
+  color:#2b2b2b;
+}
+.btn:active{ transform: scale(.98); }
+
+/* Title + instruction */
+.header{
+  position:fixed;
+  top:58px; left:12px; right:12px;
+  display:flex;
+  justify-content:center;
+  z-index:9;
+  pointer-events:none;
+}
+.headerInner{
+  pointer-events:none;
+  text-align:center;
+  padding:10px 14px;
+  border-radius:18px;
+  background: rgba(255,255,255,.70);
+  border:1px solid rgba(0,0,0,.06);
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  max-width: 680px;
+}
+.title{
+  font-weight:900;
+  font-size:22px;
+  letter-spacing:.2px;
+  line-height:1.1;
+  white-space: nowrap; /* one-liner */
+  background: linear-gradient(90deg, #ffb6d6, #bde6ff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.instruction{
+  margin-top:6px;
+  font-size:13px;
+  font-weight:700;
+  opacity:.78;
+  color:#2b2b2b;
+}
+
+/* Horizontal-only map area */
+.mapWrap{
+  position:fixed;
+  left:0; right:0;
+  top:132px; bottom:0;
+  overflow-x:auto;
+  overflow-y:hidden; /* no vertical scroll => no pull-to-refresh */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  touch-action: pan-x; /* encourage sideways scrolling only */
+  padding: 14px 14px 18px;
+}
+
+/* Map */
+.map{
+  position:relative;
+  height: calc(100vh - 170px);
+  min-height: 520px;
+  width: 2400px; /* wide map */
+  border-radius: 26px;
+  background:
+    radial-gradient(900px 600px at 25% 30%, rgba(255,193,222,.35), transparent 60%),
+    radial-gradient(900px 600px at 80% 55%, rgba(185,220,255,.35), transparent 60%),
+    radial-gradient(700px 500px at 60% 90%, rgba(255,240,180,.25), transparent 60%),
+    linear-gradient(135deg, rgba(255,255,255,.80), rgba(255,255,255,.55));
+  border:1px solid rgba(255,255,255,.45);
+  box-shadow: 0 22px 70px rgba(0,0,0,.20);
   overflow:hidden;
 }
 
-.title{
-  position:fixed;
-  top:18px;
-  left:50%;
-  transform:translateX(-50%);
-  font-weight:800;
-  font-size:20px;
-  letter-spacing:.5px;
-  background:linear-gradient(90deg,#ffb6d6,#bde6ff);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  opacity:0;
-  transition:opacity 1.2s ease;
-  z-index:10;
+/* little star specks */
+.star{
+  position:absolute;
+  width:7px; height:7px;
+  border-radius:2px;
+  background: rgba(255,255,255,.75);
+  box-shadow: 0 0 0 3px rgba(255,255,255,.18);
+  opacity:.55;
+  pointer-events:none;
 }
 
-.mapWrap{
-  position:fixed;
-  inset:0;
-  padding-top:70px;
-  overflow:auto;
-}
-
-.map{
-  width:2200px;
-  height:1400px;
-  position:relative;
-}
-
+/* Plushie puff */
 .puff{
   position:absolute;
-  width:64px;
-  height:64px;
+  width:64px; height:64px;
   border-radius:50%;
-  background:radial-gradient(circle at 35% 30%,#ffe9f4 0 40%,var(--pink) 60%,var(--pink2) 100%);
-  box-shadow:0 14px 30px rgba(0,0,0,.15);
-  transform:translate(-50%,-50%);
+  transform: translate(-50%,-50%);
   cursor:pointer;
-  transition:transform .15s ease, opacity .2s ease;
+  user-select:none;
+  -webkit-tap-highlight-color: transparent;
+
+  background:
+    radial-gradient(circle at 35% 28%, #fff2f8 0 40%, var(--pink) 62%, var(--pink2) 100%);
+  box-shadow:
+    0 18px 34px rgba(0,0,0,.18),
+    0 0 18px rgba(255,255,255,.25);
+  border:1px solid rgba(0,0,0,.06);
+  filter: saturate(1.02);
+  transition: transform .14s ease, opacity .18s ease;
 }
 
 .puff:active{
-  transform:translate(-50%,-50%) scale(.9);
+  transform: translate(-50%,-50%) scale(.92);
 }
 
+/* Plush face + glossy eyes */
 .puff::before{
   content:"";
   position:absolute;
   inset:0;
   background:
-  radial-gradient(circle at 38% 50%,#222 0 4px,transparent 5px),
-  radial-gradient(circle at 62% 50%,#222 0 4px,transparent 5px),
-  radial-gradient(circle at 50% 63%,rgba(255,120,170,.9) 0 6px,transparent 7px);
+    radial-gradient(circle at 38% 50%, #1f1f1f 0 4px, transparent 5px),
+    radial-gradient(circle at 62% 50%, #1f1f1f 0 4px, transparent 5px),
+    radial-gradient(circle at 40% 46%, rgba(255,255,255,.9) 0 1.4px, transparent 2px),
+    radial-gradient(circle at 64% 46%, rgba(255,255,255,.9) 0 1.4px, transparent 2px),
+    radial-gradient(circle at 50% 63%, rgba(255,120,170,.9) 0 6px, transparent 7px);
+  opacity:.95;
 }
 
-.special{
-  width:72px;
-  height:72px;
-}
-
-.special::after{
-  content:"";
+/* little curl */
+.curl{
   position:absolute;
-  inset:-14px;
+  width:18px; height:18px;
+  top:-8px; left:22px;
+  border:3px solid rgba(0,0,0,.12);
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  transform: rotate(20deg);
+  opacity:.75;
+}
+
+/* Special puff aura */
+.puff.special{
+  width:72px; height:72px;
+}
+.puff.special .aura{
+  position:absolute;
+  inset:-18px;
   border-radius:50%;
-  background:radial-gradient(circle,rgba(255,240,180,.8),transparent 70%);
-  animation:pulse 1.6s infinite;
+  background: radial-gradient(circle, rgba(255,240,180,.95) 0 14%, rgba(255,240,180,.30) 34%, transparent 66%);
+  animation:pulse 1.6s ease-in-out infinite;
+  pointer-events:none;
 }
-
 @keyframes pulse{
-  0%,100%{transform:scale(.95);opacity:.7}
-  50%{transform:scale(1.1);opacity:1}
+  0%,100%{ transform: scale(.96); opacity:.75; }
+  50%{ transform: scale(1.08); opacity:1; }
 }
 
-.bubble{
+/* Minimal bubble */
+.bubbleBack{
   position:fixed;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  background:var(--card);
-  padding:22px 26px;
-  border-radius:28px;
-  box-shadow:0 20px 50px rgba(0,0,0,.2);
-  font-weight:700;
-  font-size:20px;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  z-index:30;
+  background: rgba(0,0,0,.18);
+  backdrop-filter: blur(6px);
+}
+.bubble{
+  width:min(520px, 100%);
+  border-radius:26px;
+  background: rgba(255,255,255,.90);
+  border:1px solid rgba(0,0,0,.08);
+  box-shadow: 0 20px 65px rgba(0,0,0,.22);
+  padding:18px 18px 14px;
   text-align:center;
-  opacity:0;
-  animation:fadeIn .25s forwards;
 }
-
-@keyframes fadeIn{
-  to{opacity:1}
+.msg{
+  margin:0;
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:.1px;
 }
-
 .heart{
   margin-top:8px;
+  font-weight:900;
   font-size:18px;
+  opacity:.85;
+}
+.sub{
+  margin:10px 0 0;
+  font-size:13px;
+  font-weight:700;
+  opacity:.72;
+}
+.actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:14px;
+}
+.ghost{
+  background: rgba(255,255,255,.8);
+  border:1px solid rgba(0,0,0,.10);
+  box-shadow:none;
 }
 
-.confetti{
+/* Confetti pop canvas */
+#confetti{
   position:fixed;
   inset:0;
   pointer-events:none;
+  z-index:40;
+  display:none;
 }
 </style>
 </head>
 
 <body>
+  <div class="hud">
+    <div class="chip" id="counterChip">found <span id="foundN">0</span>/8</div>
+    <button class="btn" id="resetBtn" title="reset">reset</button>
+  </div>
 
-<div class="title">Find the Hidden Mira Puffs</div>
-<div class="mapWrap" id="wrap">
-  <div class="map" id="map"></div>
-</div>
+  <div class="header">
+    <div class="headerInner">
+      <div class="title">Find the Hidden Mira Puffs</div>
+      <div class="instruction">scroll left/right and tap each puff to unlock a message ✨</div>
+    </div>
+  </div>
 
-<canvas class="confetti" id="confetti"></canvas>
+  <div class="mapWrap" id="wrap">
+    <div class="map" id="map"></div>
+  </div>
+
+  <canvas id="confetti"></canvas>
+
+  <div class="bubbleBack" id="bubbleBack" role="dialog" aria-modal="true">
+    <div class="bubble">
+      <p class="msg" id="bubbleMsg"></p>
+      <div class="heart" id="bubbleHeart" style="display:none;">♡</div>
+      <p class="sub" id="bubbleSub"></p>
+      <div class="actions">
+        <button class="btn ghost" id="closeBtn">close</button>
+        <button class="btn" id="nextBtn">keep hunting</button>
+      </div>
+    </div>
+  </div>
 
 <script>
-const messages=[
-"you're adorable",
-"you're my mvp",
-"you're my favorite chaos",
-"i'm biased and rooting for you always..",
-"you're the risk i'm willing to take..",
-"pleasant distraction i can't ignore",
-"grateful to have you in my dm",
-"looking forward to those yummy hugs ♡"
-];
+(() => {
+  const TOTAL = 8;
+  const LS_KEY = "mira_puff_hunt_v2_found";
 
-const positions=[
-[200,300],[700,400],[1100,250],[1500,600],
-[1900,350],[600,1000],[1300,1100],[2000,1150]
-];
+  const messages = [
+    "you're adorable",
+    "you're my mvp",
+    "you're my favorite chaos",
+    "i'm biased and rooting for you always..",
+    "you're the risk i'm willing to take..",
+    "pleasant distraction i can't ignore",
+    "grateful to have you in my dm",
+    "looking forward to those yummy hugs ♡"
+  ];
 
-let found=0;
-let audioUnlocked=false;
+  // Wide-only positions: x across width, y within map height
+  const positions = [
+    {x: 220,  y: 220},
+    {x: 560,  y: 360},
+    {x: 980,  y: 260},
+    {x: 1320, y: 380},
+    {x: 1700, y: 260},
+    {x: 2060, y: 420},
+    {x: 1180, y: 520},
+    {x: 1940, y: 520} // special
+  ];
 
-const map=document.getElementById("map");
-const wrap=document.getElementById("wrap");
+  // Elements
+  const map = document.getElementById("map");
+  const wrap = document.getElementById("wrap");
+  const foundN = document.getElementById("foundN");
+  const resetBtn = document.getElementById("resetBtn");
 
-positions.forEach((pos,i)=>{
-  const puff=document.createElement("div");
-  puff.className="puff"+(i===7?" special":"");
-  puff.style.left=pos[0]+"px";
-  puff.style.top=pos[1]+"px";
+  const bubbleBack = document.getElementById("bubbleBack");
+  const bubbleMsg = document.getElementById("bubbleMsg");
+  const bubbleSub = document.getElementById("bubbleSub");
+  const bubbleHeart = document.getElementById("bubbleHeart");
+  const closeBtn = document.getElementById("closeBtn");
+  const nextBtn = document.getElementById("nextBtn");
 
-  puff.onclick=()=>{
-    if(!audioUnlocked){
-      audioUnlocked=true;
+  // State
+  let foundSet = new Set();
+
+  // Audio (reuse one AudioContext)
+  let audioCtx = null;
+  function unlockAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
-
-    popSound(i===7);
-    puff.style.opacity="0";
-    setTimeout(()=>puff.remove(),200);
-
-    showMessage(messages[i],i===7);
-    found++;
-
-    if(found===8){
-      setTimeout(()=>{
-        showMessage("yey!! you found them all (including me)!");
-        confetti();
-      },600);
-    }
-  };
-  map.appendChild(puff);
-});
-
-function showMessage(text,isSpecial=false){
-  const bubble=document.createElement("div");
-  bubble.className="bubble";
-  bubble.innerHTML=text+(isSpecial?'<div class="heart">♡</div>':"");
-  document.body.appendChild(bubble);
-  setTimeout(()=>bubble.remove(),2000);
-}
-
-function popSound(special=false){
-  const ctx=new (window.AudioContext||window.webkitAudioContext)();
-  const o=ctx.createOscillator();
-  const g=ctx.createGain();
-  o.connect(g);
-  g.connect(ctx.destination);
-  o.type="sine";
-  o.frequency.value=special?800:600;
-  g.gain.setValueAtTime(.3,ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.25);
-  o.start();
-  o.stop(ctx.currentTime+.25);
-}
-
-function confetti(){
-  const canvas=document.getElementById("confetti");
-  const ctx=canvas.getContext("2d");
-  canvas.width=innerWidth;
-  canvas.height=innerHeight;
-  let pieces=Array.from({length:150},()=>({
-    x:Math.random()*canvas.width,
-    y:-20,
-    r:4+Math.random()*4,
-    d:Math.random()*canvas.height
-  }));
-  let frame=0;
-  function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    pieces.forEach(p=>{
-      ctx.fillStyle=`hsl(${Math.random()*360},80%,75%)`;
-      ctx.fillRect(p.x,p.y,p.r,p.r);
-      p.y+=3;
-    });
-    frame++;
-    if(frame<80)requestAnimationFrame(draw);
+    if (audioCtx.state === "suspended") audioCtx.resume();
   }
-  draw();
-}
 
-/* tiny cinematic pan */
-window.onload=()=>{
-  document.querySelector(".title").style.opacity="1";
-  setTimeout(()=>{
-    wrap.scrollTo({left:400,top:250,behavior:"smooth"});
-  },800);
-};
+  function tone({freq=600, dur=0.12, type="sine", gain=0.22, glideTo=null}) {
+    if (!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, audioCtx.currentTime + dur);
+    g.gain.setValueAtTime(gain, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    o.stop(audioCtx.currentTime + dur);
+  }
+
+  function popSound(isSpecial=false){
+    // medium cute pop: quick up-glide + tiny clicky overtone
+    tone({freq: isSpecial ? 520 : 460, glideTo: isSpecial ? 980 : 860, dur: 0.11, type:"sine", gain: 0.20});
+    tone({freq: isSpecial ? 1200 : 1050, glideTo: isSpecial ? 900 : 820, dur: 0.07, type:"triangle", gain: 0.07});
+  }
+
+  function yeySound(){
+    // soft "yey" chime: three gentle notes
+    tone({freq: 523.25, dur: 0.10, type:"sine", gain: 0.14}); // C5
+    setTimeout(() => tone({freq: 659.25, dur: 0.11, type:"sine", gain: 0.14}), 90);  // E5
+    setTimeout(() => tone({freq: 783.99, dur: 0.14, type:"sine", gain: 0.14}), 190); // G5
+  }
+
+  // Storage
+  function save(){ localStorage.setItem(LS_KEY, JSON.stringify([...foundSet])); }
+  function load(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return;
+      const arr = JSON.parse(raw);
+      if(Array.isArray(arr)) foundSet = new Set(arr);
+    }catch(e){}
+  }
+
+  function updateCounter(){
+    foundN.textContent = String(foundSet.size);
+  }
+
+  // Bubble
+  function openBubble({msg, isSpecial=false, sub=""}){
+    bubbleMsg.textContent = msg;
+    bubbleSub.textContent = sub;
+    bubbleHeart.style.display = isSpecial ? "block" : "none";
+    bubbleBack.style.display = "flex";
+  }
+  function closeBubble(){
+    bubbleBack.style.display = "none";
+  }
+  closeBtn.addEventListener("click", closeBubble);
+  nextBtn.addEventListener("click", closeBubble);
+  bubbleBack.addEventListener("click", (e)=>{ if(e.target === bubbleBack) closeBubble(); });
+
+  // Stars
+  function addStars(){
+    for(let i=0;i<36;i++){
+      const s = document.createElement("div");
+      s.className = "star";
+      s.style.left = (60 + Math.random()*2280) + "px";
+      s.style.top  = (60 + Math.random()*(map.clientHeight-120)) + "px";
+      s.style.transform = `rotate(${Math.random()*60}deg)`;
+      s.style.opacity = String(0.35 + Math.random()*0.35);
+      map.appendChild(s);
+    }
+  }
+
+  // Build puffs
+  function createPuff(i){
+    const isSpecial = (i === TOTAL-1);
+    const puff = document.createElement("div");
+    puff.className = "puff" + (isSpecial ? " special" : "");
+    puff.style.left = positions[i].x + "px";
+    puff.style.top  = positions[i].y + "px";
+    puff.dataset.idx = String(i);
+
+    const curl = document.createElement("div");
+    curl.className = "curl";
+    puff.appendChild(curl);
+
+    if(isSpecial){
+      const aura = document.createElement("div");
+      aura.className = "aura";
+      puff.appendChild(aura);
+    }
+
+    if(foundSet.has(i)) puff.style.display = "none";
+
+    puff.addEventListener("click", () => {
+      unlockAudio(); // first tap unlocks audio
+      onFind(puff);
+    });
+
+    return puff;
+  }
+
+  function onFind(puffEl){
+    const idx = Number(puffEl.dataset.idx);
+    if(foundSet.has(idx)) return;
+
+    const isSpecial = (idx === TOTAL-1);
+
+    foundSet.add(idx);
+    save();
+    updateCounter();
+
+    popSound(isSpecial);
+
+    puffEl.style.opacity = "0";
+    puffEl.style.transform = "translate(-50%,-50%) scale(.86)";
+    setTimeout(()=> puffEl.remove(), 160);
+
+    openBubble({
+      msg: messages[idx],
+      isSpecial,
+      sub: isSpecial ? "rare puff found." : "keep going… more hiding."
+    });
+
+    if(foundSet.size === TOTAL){
+      setTimeout(() => {
+        // completion
+        confettiPop();
+        yeySound();
+        openBubble({
+          msg: "yey!! you found them all (including me)!",
+          isSpecial: false,
+          sub: "ok… come collect your reward 😌"
+        });
+      }, 260);
+    }
+  }
+
+  function render(){
+    map.innerHTML = "";
+    addStars();
+    for(let i=0;i<TOTAL;i++) map.appendChild(createPuff(i));
+  }
+
+  // Confetti POP (burst)
+  const canvas = document.getElementById("confetti");
+  const ctx = canvas.getContext("2d");
+  function resizeCanvas(){
+    canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
+    canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  }
+  window.addEventListener("resize", resizeCanvas);
+
+  function confettiPop(){
+    resizeCanvas();
+    canvas.style.display = "block";
+
+    const cx = window.innerWidth/2;
+    const cy = window.innerHeight/2;
+
+    const pieces = Array.from({length: 160}, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 3 + Math.random() * 7;
+      return {
+        x: cx, y: cy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: 3 + Math.random() * 5,
+        life: 55 + Math.random() * 25,
+        rot: Math.random() * Math.PI,
+        vr: (-0.25 + Math.random()*0.5)
+      };
+    });
+
+    let frame = 0;
+    function tick(){
+      frame++;
+      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+
+      for(const p of pieces){
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.05; // tiny gravity but burst-first
+        p.vx *= 0.99;
+        p.vy *= 0.99;
+        p.rot += p.vr;
+        p.life -= 1;
+
+        if(p.life > 0){
+          const alpha = Math.min(1, p.life / 40);
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = `hsl(${Math.floor(Math.random()*360)}, 85%, 75%)`;
+          ctx.fillRect(-p.size, -p.size/2, p.size*2, p.size);
+          ctx.restore();
+        }
+      }
+
+      if(frame < 70){
+        requestAnimationFrame(tick);
+      }else{
+        canvas.style.display = "none";
+        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+      }
+    }
+    tick();
+  }
+
+  // Reset
+  resetBtn.addEventListener("click", () => {
+    localStorage.removeItem(LS_KEY);
+    foundSet = new Set();
+    updateCounter();
+    render();
+    openBubble({ msg: "reset done.", sub: "puffs are hiding again 😌" });
+  });
+
+  // Init
+  load();
+  updateCounter();
+  render();
+
+  // Soft pan intro (horizontal only)
+  setTimeout(() => {
+    // start slightly left then pan right
+    wrap.scrollLeft = 40;
+    setTimeout(() => wrap.scrollTo({left: 360, behavior: "smooth"}), 450);
+  }, 250);
+
+})();
 </script>
-
 </body>
 </html>
